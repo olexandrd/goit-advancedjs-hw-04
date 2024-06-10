@@ -30,17 +30,35 @@ ul {
   width: 400px;
 }
 
-.search-btn {
+button {
   background-color: #fff;
   border: 1px solid rgb(89, 89, 210);
-  border-radius: 5px;
   cursor: pointer;
   display: block;
+  border-radius: 5px;
+}
+
+.search-btn {
   overflow: hidden;
 }
 
 .search-icon {
   fill: rgb(0, 0, 0);
+}
+
+.infinity-scroll-switch {
+  display: block;
+}
+
+.infinity-scroll-switch-off {
+  display: block;
+  border: 3px solid rgb(89, 89, 210);
+}
+
+.infinity-scroll-switch-on {
+  display: block;
+  background-color: rgba(66, 243, 12, 0.9);
+  border: 3px solid rgb(18, 220, 22);
 }
 
 .gallery {
@@ -100,4 +118,15 @@ ul {
   font-size: 10px;
   display: block;
   margin: 0;
+}
+
+.load-more-container {
+  margin: 0 auto;
+  padding: 10px;
+  background-color: rgb(89, 89, 210);
+}
+
+.load-more-btn {
+  margin: 0 auto;
+  border-radius: 5px;
 }
