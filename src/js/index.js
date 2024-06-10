@@ -79,7 +79,11 @@ async function serviceFetchImages(searchQuery, paginationPage = 1) {
     const images = response.data.hits;
     return images;
   } catch (error) {
-    console.error('error', error);
+    iziToast.error({
+      title: 'Error',
+      message: `Got an error: ${error.message} with status ${error.response.status}`,
+      closeOnClick: true,
+    });
   }
 }
 
