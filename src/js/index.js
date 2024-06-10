@@ -81,7 +81,7 @@ async function serviceFetchImages(searchQuery, paginationPage = 1) {
   } catch (error) {
     iziToast.error({
       title: 'Error',
-      message: `Got an error: ${error.message} with status ${error.response.status}`,
+      message: `Got an error: ${error.message}`,
       closeOnClick: true,
     });
   }
