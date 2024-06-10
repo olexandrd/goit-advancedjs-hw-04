@@ -16,11 +16,19 @@ const pixabayApiKey = import.meta.env.VITE_PIXABAY_API_KEY;
 const baseUrl = 'https://pixabay.com/api/';
 const paginationPerPage = 40;
 let paginationPage = 1;
+const observerOptions = {
+  root: null,
+  rootMargin: '0px 0px 350px 0px',
+};
 
 refs.searchForm.addEventListener('submit', handleSearchFormSubmit);
 refs.infinityScrollSwitch.addEventListener('click', handleInfinityScrollSwitch);
+refs.loadMoreButton.addEventListener('click', loadMoreHandler);
+let observer = new IntersectionObserver(loadMoreHandler, observerOptions);
 
-function handleInfinityScrollSwitch() {
+function handleInfinityScrollSwitch(e) {
+  console.log('Infinity scroll switch clicked');
+  console.log(e);
   if (
     refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-off')
   ) {
@@ -30,15 +38,18 @@ function handleInfinityScrollSwitch() {
     );
     refs.loadMoreContainer.hidden = true;
     refs.loadMoreButton.removeEventListener('click', loadMoreHandler);
+    if (refs.gallery.children.length > 0) {
+      observer.observe(refs.infinityScrollGuard);
+    }
   } else {
     refs.infinityScrollSwitch.classList.replace(
       'infinity-scroll-switch-on',
       'infinity-scroll-switch-off'
     );
-    console.log(refs.gallery.children.length);
     if (refs.gallery.children.length > 0) {
       refs.loadMoreContainer.hidden = false;
     }
+    observer.unobserve(refs.infinityScrollGuard);
     refs.loadMoreButton.addEventListener('click', loadMoreHandler);
   }
 }
@@ -61,6 +72,8 @@ async function handleSearchFormSubmit(e) {
     refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-off')
   ) {
     refs.loadMoreContainer.hidden = false;
+  } else {
+    observer.observe(refs.infinityScrollGuard);
   }
 }
 
@@ -87,7 +100,18 @@ async function serviceFetchImages(searchQuery, paginationPage = 1) {
   }
 }
 
-async function loadMoreHandler() {
+async function loadMoreHandler(entries = []) {
+  if (
+    refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-on') &&
+    !entries[0].isIntersecting
+  ) {
+    return;
+  } else {
+    await loadMoreImages();
+  }
+}
+
+async function loadMoreImages() {
   paginationPage++;
   const searchQuery = refs.searchForm.elements.searchQuery.value;
   const imageArray = await serviceFetchImages(searchQuery, paginationPage);
