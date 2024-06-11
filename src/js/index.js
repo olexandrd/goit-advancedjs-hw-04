@@ -64,7 +64,7 @@ async function handleSearchFormSubmit(e) {
     });
     return;
   }
-  const apiResponse = await serviceFetchImages(searchQuery);
+  const apiResponse = await serviceFetchImages(searchQuery, paginationPage);
   if (!apiResponse.hits.length) {
     iziToast.warning({
       title: 'No images found',
@@ -75,7 +75,19 @@ async function handleSearchFormSubmit(e) {
     return;
   }
   refs.gallery.innerHTML = '';
+  iziToast.info({
+    title: 'Hooray!',
+    message: `We found ${apiResponse.totalHits} images.`,
+    position: 'topRight',
+    closeOnClick: true,
+  });
   refs.gallery.insertAdjacentHTML('beforeend', galleryMarkup(apiResponse.hits));
+  if (
+    paginationPage * paginationPerPage >=
+    Math.min(apiResponse.total, apiResponse.totalHits)
+  ) {
+    stopLoadMore();
+  }
   if (
     refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-off')
   ) {
@@ -147,8 +159,8 @@ function stopLoadMore() {
     refs.loadMoreButton.removeEventListener('click', loadMoreHandler);
     refs.loadMoreButton.disabled = true;
     iziToast.info({
-      title: 'No more images found',
-      message: 'Thats all for now!',
+      title: "We're sorry,",
+      message: "but you've reached the end of search results.",
       position: 'center',
       closeOnClick: true,
     });
