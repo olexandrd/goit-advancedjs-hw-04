@@ -12,6 +12,11 @@ body {
   line-height: 1.5;
 }
 
+a {
+  color: #212121;
+  text-decoration: none;
+}
+
 ul {
   list-style-type: none;
   padding: 0;
@@ -68,6 +73,7 @@ button {
   margin: 0 auto;
   max-width: 1200px;
   padding: 10px;
+  justify-content: center;
 }
 
 .gallery-card {
