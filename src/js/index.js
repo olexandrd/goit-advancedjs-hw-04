@@ -27,8 +27,6 @@ refs.loadMoreButton.addEventListener('click', loadMoreHandler);
 let observer = new IntersectionObserver(loadMoreHandler, observerOptions);
 
 function handleInfinityScrollSwitch(e) {
-  console.log('Infinity scroll switch clicked');
-  console.log(e);
   if (
     refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-off')
   ) {
@@ -57,8 +55,17 @@ function handleInfinityScrollSwitch(e) {
 async function handleSearchFormSubmit(e) {
   e.preventDefault();
   const searchQuery = e.target.elements.searchQuery.value;
-  const imageArray = await serviceFetchImages(searchQuery);
-  if (!imageArray.length) {
+  if (!searchQuery) {
+    iziToast.warning({
+      title: 'Empty request!',
+      message: 'Please enter a search query!',
+      position: 'center',
+      closeOnClick: true,
+    });
+    return;
+  }
+  const apiResponse = await serviceFetchImages(searchQuery);
+  if (!apiResponse.hits.length) {
     iziToast.warning({
       title: 'No images found',
       message: 'Please enter a more specific query!',
@@ -67,7 +74,8 @@ async function handleSearchFormSubmit(e) {
     });
     return;
   }
-  refs.gallery.insertAdjacentHTML('beforeend', galleryMarkup(imageArray));
+  refs.gallery.innerHTML = '';
+  refs.gallery.insertAdjacentHTML('beforeend', galleryMarkup(apiResponse.hits));
   if (
     refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-off')
   ) {
@@ -89,7 +97,7 @@ async function serviceFetchImages(searchQuery, paginationPage = 1) {
   });
   try {
     const response = await axios.get(`${baseUrl}?${queryString}`);
-    const images = response.data.hits;
+    const images = response.data;
     return images;
   } catch (error) {
     iziToast.error({
@@ -114,8 +122,37 @@ async function loadMoreHandler(entries = []) {
 async function loadMoreImages() {
   paginationPage++;
   const searchQuery = refs.searchForm.elements.searchQuery.value;
-  const imageArray = await serviceFetchImages(searchQuery, paginationPage);
-  refs.gallery.insertAdjacentHTML('beforeend', galleryMarkup(imageArray));
+  const apiResponse = await serviceFetchImages(searchQuery, paginationPage);
+  if (
+    paginationPage * paginationPerPage >=
+    Math.min(apiResponse.total, apiResponse.totalHits)
+  ) {
+    stopLoadMore();
+  }
+  refs.gallery.insertAdjacentHTML('beforeend', galleryMarkup(apiResponse.hits));
+}
+
+function stopLoadMore() {
+  if (
+    refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-on')
+  ) {
+    observer.unobserve(refs.infinityScrollGuard);
+    iziToast.info({
+      title: 'No more images found',
+      message: 'Thats all for now!',
+      position: 'center',
+      closeOnClick: true,
+    });
+  } else {
+    refs.loadMoreButton.removeEventListener('click', loadMoreHandler);
+    refs.loadMoreButton.disabled = true;
+    iziToast.info({
+      title: 'No more images found',
+      message: 'Thats all for now!',
+      position: 'center',
+      closeOnClick: true,
+    });
+  }
 }
 
 function galleryMarkup(images) {
