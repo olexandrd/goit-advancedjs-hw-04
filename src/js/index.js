@@ -1,4 +1,4 @@
-import { galleryMarkup, showLightbox } from './markup';
+import { galleryMarkup, lightbox } from './markup';
 import axios from 'axios';
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
@@ -16,7 +16,7 @@ const refs = {
 const pixabayApiKey = import.meta.env.VITE_PIXABAY_API_KEY;
 const baseUrl = 'https://pixabay.com/api/';
 const paginationPerPage = 40;
-let paginationPage = 1;
+let paginationPage;
 const observerOptions = {
   root: null,
   rootMargin: '0px 0px 350px 0px',
@@ -55,7 +55,9 @@ function handleInfinityScrollSwitch(e) {
 
 async function handleSearchFormSubmit(e) {
   e.preventDefault();
-  const searchQuery = e.target.elements.searchQuery.value;
+  paginationPage = 1;
+  const searchQuery = e.target.elements.searchQuery.value.trim();
+  refs.gallery.innerHTML = '';
   if (!searchQuery) {
     iziToast.warning({
       title: 'Empty request!',
@@ -75,7 +77,7 @@ async function handleSearchFormSubmit(e) {
     });
     return;
   }
-  refs.gallery.innerHTML = '';
+
   iziToast.info({
     title: 'Hooray!',
     message: `We found ${apiResponse.totalHits} images.`,
@@ -83,19 +85,20 @@ async function handleSearchFormSubmit(e) {
     closeOnClick: true,
   });
   refs.gallery.insertAdjacentHTML('beforeend', galleryMarkup(apiResponse.hits));
-  await showLightbox();
+  lightbox.refresh();
+  if (
+    refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-off')
+  ) {
+    refs.loadMoreContainer.hidden = false;
+    refs.loadMoreButton.addEventListener('click', loadMoreHandler);
+  } else {
+    observer.observe(refs.infinityScrollGuard);
+  }
   if (
     paginationPage * paginationPerPage >=
     Math.min(apiResponse.total, apiResponse.totalHits)
   ) {
     stopLoadMore();
-  }
-  if (
-    refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-off')
-  ) {
-    refs.loadMoreContainer.hidden = false;
-  } else {
-    observer.observe(refs.infinityScrollGuard);
   }
 }
 
@@ -135,7 +138,7 @@ async function loadMoreHandler(entries = []) {
 
 async function loadMoreImages() {
   paginationPage++;
-  const searchQuery = refs.searchForm.elements.searchQuery.value;
+  const searchQuery = refs.searchForm.elements.searchQuery.value.trim();
   const apiResponse = await serviceFetchImages(searchQuery, paginationPage);
   if (
     paginationPage * paginationPerPage >=
@@ -144,22 +147,15 @@ async function loadMoreImages() {
     stopLoadMore();
   }
   refs.gallery.insertAdjacentHTML('beforeend', galleryMarkup(apiResponse.hits));
+  lightbox.refresh();
 }
 
 function stopLoadMore() {
-  if (
-    refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-on')
-  ) {
-    observer.unobserve(refs.infinityScrollGuard);
-    iziToast.info({
-      title: 'No more images found',
-      message: 'Thats all for now!',
-      position: 'center',
-      closeOnClick: true,
-    });
-  } else {
-    refs.loadMoreButton.removeEventListener('click', loadMoreHandler);
-    refs.loadMoreButton.disabled = true;
+  observer.unobserve(refs.infinityScrollGuard);
+  refs.loadMoreContainer.hidden = true;
+  refs.loadMoreButton.removeEventListener('click', loadMoreHandler);
+
+  if (refs.gallery.children.length > 0) {
     iziToast.info({
       title: "We're sorry,",
       message: "but you've reached the end of search results.",

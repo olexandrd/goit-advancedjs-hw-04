@@ -1,6 +1,11 @@
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
+const lightbox = new SimpleLightbox('.gallery li div a', {
+  captionsData: 'alt',
+  captionDelay: 250,
+});
+
 function galleryMarkup(images) {
   return images
     .map(
@@ -51,14 +56,4 @@ function galleryMarkup(images) {
     .join('');
 }
 
-async function showLightbox() {
-  const lightbox = new SimpleLightbox('.gallery li div a', {
-    captionsData: 'alt',
-    captionDelay: 250,
-  });
-  lightbox.on('error.simplelightbox', function (e) {
-    console.log(e);
-  });
-}
-
-export { galleryMarkup, showLightbox };
+export { galleryMarkup, lightbox };
