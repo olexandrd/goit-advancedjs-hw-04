@@ -67,38 +67,49 @@ async function handleSearchFormSubmit(e) {
     });
     return;
   }
-  const apiResponse = await serviceFetchImages(searchQuery, paginationPage);
-  if (!apiResponse.hits.length) {
-    iziToast.warning({
-      title: 'No images found',
-      message: 'Please enter a more specific query!',
-      position: 'center',
+  try {
+    const apiResponse = await serviceFetchImages(searchQuery, paginationPage);
+    if (!apiResponse.hits.length) {
+      iziToast.warning({
+        title: 'No images found',
+        message: 'Please enter a more specific query!',
+        position: 'center',
+        closeOnClick: true,
+      });
+      return;
+    }
+
+    iziToast.info({
+      title: 'Hooray!',
+      message: `We found ${apiResponse.totalHits} images.`,
+      position: 'topRight',
       closeOnClick: true,
     });
-    return;
-  }
-
-  iziToast.info({
-    title: 'Hooray!',
-    message: `We found ${apiResponse.totalHits} images.`,
-    position: 'topRight',
-    closeOnClick: true,
-  });
-  refs.gallery.insertAdjacentHTML('beforeend', galleryMarkup(apiResponse.hits));
-  lightbox.refresh();
-  if (
-    refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-off')
-  ) {
-    refs.loadMoreContainer.hidden = false;
-    refs.loadMoreButton.addEventListener('click', loadMoreHandler);
-  } else {
-    observer.observe(refs.infinityScrollGuard);
-  }
-  if (
-    paginationPage * paginationPerPage >=
-    Math.min(apiResponse.total, apiResponse.totalHits)
-  ) {
-    stopLoadMore();
+    refs.gallery.insertAdjacentHTML(
+      'beforeend',
+      galleryMarkup(apiResponse.hits)
+    );
+    lightbox.refresh();
+    if (
+      refs.infinityScrollSwitch.classList.contains('infinity-scroll-switch-off')
+    ) {
+      refs.loadMoreContainer.hidden = false;
+      refs.loadMoreButton.addEventListener('click', loadMoreHandler);
+    } else {
+      observer.observe(refs.infinityScrollGuard);
+    }
+    if (
+      paginationPage * paginationPerPage >=
+      Math.min(apiResponse.total, apiResponse.totalHits)
+    ) {
+      stopLoadMore();
+    }
+  } catch (error) {
+    iziToast.error({
+      title: 'Error',
+      message: `Got an error: ${error.message}`,
+      closeOnClick: true,
+    });
   }
 }
 

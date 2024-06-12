@@ -104,6 +104,8 @@ button {
   display: flex;
   gap: 15px;
   justify-content: center;
+  padding: 0 10px;
+  margin: auto 0;
 }
 
 .gallery-card-social>li {
